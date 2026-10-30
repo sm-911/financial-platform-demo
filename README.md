@@ -137,7 +137,6 @@ NEWS_QUERY  = "Reliance Industries"
 
 ---
 
-## 📝 License
 ## 🧪 Testing & Contributions
 We welcome **testing** of the platform and any **suggested edits**. Feel free to:
 - Run the Jupyter notebook or the web UI and report any bugs or visual issues.
@@ -145,4 +144,5 @@ We welcome **testing** of the platform and any **suggested edits**. Feel free to
 - Open a Pull Request with your changes – we’ll review and merge helpful contributions.
 Your feedback helps make the platform more robust and user‑friendly.
 
+## 📝 License
 MIT
