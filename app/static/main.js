@@ -82,7 +82,16 @@
     const selectNone = document.getElementById('select-none-models');
     if (selectAll) {
       selectAll.addEventListener('click', function () {
-        document.querySelectorAll('.model-chip input[type="checkbox"]').forEach(cb => cb.checked = true);
+        const checkboxes = Array.from(document.querySelectorAll('.model-chip input[type="checkbox"]'));
+        // Uncheck all first
+        checkboxes.forEach(cb => cb.checked = false);
+        // Pick up to 3 random models
+        const count = Math.min(3, checkboxes.length);
+        for (let i = 0; i < count; i++) {
+          const idx = Math.floor(Math.random() * checkboxes.length);
+          const cb = checkboxes.splice(idx, 1)[0]; // remove chosen
+          if (cb) cb.checked = true;
+        }
       });
     }
     if (selectNone) {

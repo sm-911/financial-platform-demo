@@ -81,7 +81,8 @@ def run():
         selected_models = ['rf']
     # Enforce maximum of 3 models
     if len(selected_models) > 3:
-        selected_models = selected_models[:3]
+        import random
+        selected_models = random.sample(selected_models, 3)
     # Check disk cache first
     cached = get_cached_result(ticker, selected_models, {
         "lookback": lookback,

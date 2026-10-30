@@ -1,33 +1,27 @@
-# Python bytecode
+# Python
 __pycache__/
 *.py[cod]
-*.pyo
+*$py.class
 
-# Virtual environments
+# Virtual env
 venv/
-.venv/
+ENV/
 env/
 
-# IDE / OS files
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-
-# Jupyter artefacts
-*.ipynb_checkpoints/
+# Jupyter
 .ipynb_checkpoints/
 
-# TensorFlow / Keras saved models
-*.h5
-*.keras
-saved_model/
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
 
 # Distribution / packaging
-dist/
 build/
+Dist/
 *.egg-info/
 
-# Secrets — never commit your API key!
-.env
-secrets.py
+# OS files
+Thumbs.db
+.DS_Store
