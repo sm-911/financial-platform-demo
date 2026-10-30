@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Waiting – {{ run_id[:8] }}{% endblock %}
+
+{% block content %}
+<div class="waiting-center">
+  <div id="spinner-area">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
+      <div class="spinner"></div>
+      <div>
+        <p class="waiting-title">Running Forecast…</p>
+        <p class="waiting-sub">Please wait while the models train. This may take a minute.</p>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+      <p class="text-muted text-sm" id="elapsed-label">Elapsed: 0s</p>
+    </div>
+  </div>
+
+  <div id="error-area" style="display:none; max-width:680px; width:100%;">
+    <div class="alert-error">
+      <h4>Pipeline Error</h4>
+      <pre id="error-text"></pre>
+    </div>
+    <div class="mt-20">
+      <a href="/" class="btn-outline">← Back to Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const runId = {{ run_id | tojson }};
+  let elapsed = 0;
+  const elapsedLabel = document.getElementById('elapsed-label');
+
+  const ticker = setInterval(function () {
+    elapsed++;
+    elapsedLabel.textContent = 'Elapsed: ' + elapsed + 's';
+  }, 1000);
+
+  const check = setInterval(function () {
+    fetch('/status/' + runId)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.status === 'finished') {
+          clearInterval(check);
+          clearInterval(ticker);
+          window.location.href = '/result/' + runId;
+        } else if (data.status === 'error') {
+          clearInterval(check);
+          clearInterval(ticker);
+          document.getElementById('spinner-area').style.display = 'none';
+          document.getElementById('error-area').style.display  = 'block';
+          document.getElementById('error-text').textContent = data.error || 'Unknown error.';
+        }
+      })
+      .catch(function () { /* network hiccup – keep polling */ });
+  }, 2000);
+})();
+</script>
+{% endblock %}

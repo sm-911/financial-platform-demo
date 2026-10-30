@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Results – {{ data.ticker }}{% endblock %}
+
+{% block nav_extra %}
+<a href="/" class="nav-back-btn">← New Forecast</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="ticker-hero">
+  <div>
+    <div class="ticker-badge">{{ data.ticker }}</div>
+    <div class="ticker-meta">
+      Generated {{ data.generated_at[:10] }} &nbsp;·&nbsp;
+      {{ data.model_results | length }} model{{ 's' if data.model_results | length != 1 }}
+    </div>
+  </div>
+</div>
+
+<!-- Technical & Sentiment Charts -->
+<p class="section-title">Technical Analysis &amp; Sentiment</p>
+<div class="charts-grid">
+  {% if data.sentiment_img %}
+  <div class="chart-card">
+    <h6>Sentiment Distribution</h6>
+    <img src="data:image/png;base64,{{ data.sentiment_img }}" alt="Sentiment distribution">
+  </div>
+  {% endif %}
+  {% if data.ma_img %}
+  <div class="chart-card">
+    <h6>Moving Average</h6>
+    <img src="data:image/png;base64,{{ data.ma_img }}" alt="Moving average">
+  </div>
+  {% endif %}
+  {% if data.bb_img %}
+  <div class="chart-card">
+    <h6>Bollinger Bands</h6>
+    <img src="data:image/png;base64,{{ data.bb_img }}" alt="Bollinger bands">
+  </div>
+  {% endif %}
+</div>
+
+<!-- Model Results -->
+{% if data.model_results %}
+<p class="section-title">Model Results</p>
+
+{% for model in data.model_results %}
+{% set m = model.metrics %}
+<div class="model-card">
+  <div class="model-card-header">
+    <span class="model-badge">{{ model.name | upper }}</span>
+    <h3>{{ model.name | upper }} Forecast</h3>
+  </div>
+  <div class="model-card-body">
+
+    <!-- Metric pills -->
+    <div class="metrics-row">
+{% set rmse = m.get('rmse') %}
+          <div class="metric-pill">
+            <div class="metric-label">RMSE</div>
+            <div class="metric-value">
+              {{ "%.4f" | format(rmse) if rmse is not none else '—' }}
+            </div>
+          </div>
+          {% set mae = m.get('mae') %}
+          <div class="metric-pill">
+            <div class="metric-label">MAE</div>
+            <div class="metric-value">
+              {{ "%.4f" | format(mae) if mae is not none else '—' }}
+            </div>
+          </div>
+          {% set mape = m.get('mape') %}
+          <div class="metric-pill">
+            <div class="metric-label">MAPE</div>
+            <div class="metric-value">
+              {{ "%.2f%%" | format(mape * 100) if mape is not none else '—' }}
+            </div>
+          </div>
+          {% set r2 = m.get('r2') %}
+          <div class="metric-pill {% if r2 is not none and r2 > 0.7 %}good{% elif r2 is not none and r2 > 0.4 %}warn{% elif r2 is not none %}bad{% endif %}">
+            <div class="metric-label">R²</div>
+            <div class="metric-value">
+              {{ "%.4f" | format(r2) if r2 is not none else '—' }}
+            </div>
+          </div>
+    </div>
+
+    <!-- Forecast + extra images -->
+    <div class="model-images">
+      {% if model.forecast_img %}
+      <div class="model-img-wrap">
+        <img src="data:image/png;base64,{{ model.forecast_img }}" alt="Forecast – {{ model.name }}">
+        <div class="model-img-label">Forecast vs Actual</div>
+      </div>
+      {% endif %}
+      {% if model.extra_img %}
+      <div class="model-img-wrap">
+        <img src="data:image/png;base64,{{ model.extra_img }}" alt="Extra – {{ model.name }}">
+        <div class="model-img-label">Feature Importance / Loss Curve</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Download buttons -->
+    <div class="model-actions">
+      <a href="/download/{{ run_id }}/forecast_{{ model.name }}.png" class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Forecast PNG
+      </a>
+      <a href="/download/{{ run_id }}/metrics.csv" class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Metrics CSV
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endfor %}
+
+{% else %}
+<div class="card" style="text-align:center; padding:48px 24px; color:var(--text-muted);">
+  <p style="font-size:36px; margin-bottom:12px;">📭</p>
+  <p style="font-weight:600;">No model results returned.</p>
+  <p class="text-sm mt-10">The pipeline may have encountered an issue. Check the server logs.</p>
+  <a href="/" class="btn-outline" style="margin-top:20px; display:inline-flex;">← Try Again</a>
+</div>
+{% endif %}
+
+{% endblock %}

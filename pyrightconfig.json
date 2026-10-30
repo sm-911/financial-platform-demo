@@ -1,0 +1,20 @@
+{
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "off",
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "reportUndefinedVariable": false,
+  "reportPossiblyUnbound": false,
+  "reportGeneralTypeIssues": false,
+  "reportAttributeAccessIssue": false,
+  "reportIndexIssue": false,
+  "reportOperatorIssue": false,
+  "reportOptionalSubscript": false,
+  "reportOptionalMemberAccess": false,
+  "reportReturnType": false,
+  "exclude": [
+    ".venv",
+    "__pycache__"
+  ]
+}

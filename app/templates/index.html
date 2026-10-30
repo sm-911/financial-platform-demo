@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Intelligent Financial Platform{% endblock %}
+
+{% block content %}
+<div style="max-width:640px; margin:0 auto;">
+
+  <div style="margin-bottom:32px;">
+    <h1 style="font-size:26px; font-weight:800; letter-spacing:-.4px; margin-bottom:6px;">
+      Financial Forecast
+    </h1>
+    <p class="text-muted text-sm">Select a market, company and models — then run the pipeline.</p>
+  </div>
+
+  <form id="forecast-form" method="post" action="{{ url_for('main.run') }}">
+
+    <!-- Market + Company -->
+    <div class="card" style="margin-bottom:16px;">
+      <p class="card-title">Target</p>
+
+      <div class="field">
+        <label for="market-select">Market</label>
+        <select name="market" id="market-select" required>
+          {% for m in markets %}
+          <option value="{{ m.key }}">{{ m.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="company-select">Company</label>
+        <select name="ticker" id="company-select" required></select>
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label for="news_query">News Search Query <span class="text-muted">(optional)</span></label>
+        <input type="text" name="news_query" id="news_query"
+               placeholder="Leave empty to use ticker symbol">
+      </div>
+    </div>
+
+    <!-- Models -->
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <p class="card-title" style="margin-bottom:0;">Models</p>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="select-all-models"  class="btn-outline" style="padding:4px 10px; font-size:12px;">All</button>
+          <button type="button" id="select-none-models" class="btn-outline" style="padding:4px 10px; font-size:12px;">None</button>
+        </div>
+      </div>
+
+      <div class="model-grid">
+        {% set model_labels = {
+          'rf':          ('RF',          'Random Forest'),
+          'lstm':        ('LSTM',        'Long Short‑Term Memory'),
+          'xgb':         ('XGB',         'XGBoost'),
+          'lgbm':        ('LGBM',        'LightGBM'),
+          'catboost':    ('CatBoost',    'CatBoost'),
+          'gru':         ('GRU',         'Gated Recurrent Unit'),
+          'cnn_lstm':    ('CNN‑LSTM',    'CNN + LSTM Hybrid'),
+          'transformer': ('Transformer', 'Attention Transformer'),
+          'arima':       ('ARIMA',       'ARIMA'),
+          'svm':         ('SVM',         'Support Vector Machine')
+        } %}
+        {% for key, (short, long) in model_labels.items() %}
+        <div class="model-chip">
+          <input type="checkbox" name="model_{{ key }}" id="model_{{ key }}"
+                 {% if key == 'rf' %}checked{% endif %}>
+          <label for="model_{{ key }}" title="{{ long }}">{{ short }}</label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Advanced -->
+    <div class="card" style="margin-bottom:24px;">
+      <button type="button" class="advanced-toggle" id="advanced-toggle">
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+        Advanced Settings
+      </button>
+      <div class="advanced-body" id="advanced-body">
+        <hr class="divider">
+        <div class="form-row">
+          <div class="field" style="margin-bottom:0;">
+            <label>Look‑back period (days)</label>
+            <input type="number" name="lookback" value="60" min="1">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Forecast horizon (days)</label>
+            <input type="number" name="horizon" value="30" min="1">
+          </div>
+        </div>
+        <div class="field mt-10" style="margin-top:14px; margin-bottom:0;">
+          <label>Extra hyper-parameters <span class="text-muted">(e.g. xgb_learning_rate=0.05)</span></label>
+          <textarea name="extra_params" rows="2" placeholder="xgb_learning_rate=0.05&#10;lgbm_num_leaves=31"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-primary" id="submit-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+      Run Forecast
+    </button>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.MARKET_MAP = {{ market_map|safe }};
+</script>
+{% endblock %}
