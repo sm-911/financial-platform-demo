@@ -1,10 +1,10 @@
-# 📈 Intelligent Financial Research & Analysis Platform
+# Intelligent Financial Research & Analysis Platform
 
 > *"An intelligent financial analysis platform that combines stock data, news sentiment, and a suite of machine‑learning models to help users analyze and understand stock market trends more efficiently."*
 
 ---
 
-## 🔍 What It Does
+## What It Does
 
 | Step | What Happens |
 |---|---|
@@ -16,7 +16,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 intelligent-financial-platform-expanded/
@@ -55,7 +55,7 @@ intelligent-financial-platform-expanded/
 
 ---
 
-## ⚙️ Setup
+## Setup
 
 ```bash
 # 1. Clone the repo
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🔑 NewsAPI Key (Optional but Recommended)
+## NewsAPI Key (Optional but Recommended)
 
 1. Go to <https://newsapi.org/register> — free in 30 seconds.
 2. Open `config.py` and replace:
@@ -86,7 +86,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ Run
+## Run
 
 ```bash
 python main.py
@@ -100,7 +100,7 @@ NEWS_QUERY  = "Reliance Industries"
 
 ---
 
-## 📊 Charts Produced
+## Charts Produced
 
 1. Close Price + 20‑Day Moving Average
 2. Bollinger Bands
@@ -112,7 +112,7 @@ NEWS_QUERY  = "Reliance Industries"
 
 ---
 
-## 📐 Metrics Explained
+## Metrics Explained
 
 | Metric | Meaning | Better when |
 |---|---|---|
@@ -123,7 +123,7 @@ NEWS_QUERY  = "Reliance Industries"
 
 ---
 
-## 🧰 Dependencies
+## Dependencies
 
 | Package | Purpose |
 |---|---|
@@ -137,7 +137,7 @@ NEWS_QUERY  = "Reliance Industries"
 
 ---
 
-## 🧪 Testing & Contributions
+## Testing & Contributions
 We welcome **testing** of the platform and any **suggested edits**. Feel free to:
 - Run the Jupyter notebook or the web UI and report any bugs or visual issues.
 - Propose improvements to model selection, chart layouts, or documentation.
