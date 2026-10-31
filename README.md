@@ -141,7 +141,7 @@ NEWS_QUERY  = "Reliance Industries"
 We welcome **testing** of the platform and any **suggested edits**. Feel free to:
 - Run the Jupyter notebook or the web UI and report any bugs or visual issues.
 - Propose improvements to model selection, chart layouts, or documentation.
-- Open a Pull Request with your changes – we’ll review and merge helpful contributions.
+- Open a Pull Request with your changes – I’ll review and merge helpful contributions.
 Your feedback helps make the platform more robust and user‑friendly.
 
 
