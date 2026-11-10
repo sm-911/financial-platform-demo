@@ -44,12 +44,14 @@ def index():
     # Populate market and ticker lists for the UI
     markets = [
         {"key": "SENSEX", "label": "Sensex (30 stocks)"},
-        {"key": "NIFTY", "label": "Nifty 50 (50 stocks)"},
+        {"key": "NIFTY",  "label": "Nifty 50 (50 stocks)"},
         {"key": "NASDAQ", "label": "Nasdaq‑100 (100 stocks)"},
+        {"key": "NYSE",   "label": "NYSE (266 stocks)"},
+        {"key": "NSE",    "label": "NSE India (150 stocks)"},
     ]
-    # Build a dictionary: market -> list of (ticker, name)
+    # Build a dictionary: market -> list of {id, ticker, name}
     from config import STOCK_OPTIONS
-    market_map = {"SENSEX": [], "NIFTY": [], "NASDAQ": []}
+    market_map = {"SENSEX": [], "NIFTY": [], "NASDAQ": [], "NYSE": [], "NSE": []}
     for k, (ticker, name, cat) in STOCK_OPTIONS.items():
         if "Sensex" in cat:
             market_map["SENSEX"].append({"id": k, "ticker": ticker, "name": name})
@@ -57,6 +59,26 @@ def index():
             market_map["NIFTY"].append({"id": k, "ticker": ticker, "name": name})
         else:
             market_map["NASDAQ"].append({"id": k, "ticker": ticker, "name": name})
+
+    # Load NYSE and NSE from extra Excel data files
+    try:
+        import openpyxl
+        from pathlib import Path as _Path
+        _xls_base = _Path(__file__).parent.parent / 'data' / 'extra_markets'
+        _nyse_path = _xls_base / 'nyse_companies.xlsx'
+        _nse_path  = _xls_base / 'nse_companies.xlsx'
+        for mkey, path, suffix in [('NYSE', _nyse_path, ''), ('NSE', _nse_path, '.NS')]:
+            if path.exists():
+                wb = openpyxl.load_workbook(path)
+                ws = wb.active
+                rows = list(ws.iter_rows(values_only=True))
+                for row in rows[1:]:
+                    sym, cname = str(row[0]).strip(), str(row[1]).strip()
+                    if sym and cname and sym != 'None':
+                        market_map[mkey].append({"id": sym, "ticker": sym + suffix, "name": cname})
+    except Exception as e:
+        logger.warning(f"Could not load extra market data: {e}")
+
     return render_template('index.html', markets=markets, market_map=json.dumps(market_map))
 
 @bp.route('/run', methods=['POST'])

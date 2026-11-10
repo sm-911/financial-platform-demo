@@ -17,18 +17,28 @@
     <div class="card" style="margin-bottom:16px;">
       <p class="card-title">Target</p>
 
+      <!-- Market search bar -->
       <div class="field">
-        <label for="market-select">Market</label>
-        <select name="market" id="market-select" required>
-          {% for m in markets %}
-          <option value="{{ m.key }}">{{ m.label }}</option>
-          {% endfor %}
-        </select>
+        <label for="market-search">Market / Index</label>
+        <div class="search-wrap" id="market-search-wrap">
+          <input type="text" id="market-search" class="search-input" autocomplete="off"
+                 placeholder="Search market… (e.g. NYSE, NIFTY)" aria-label="Search market">
+          <ul class="search-dropdown" id="market-dropdown" role="listbox"></ul>
+        </div>
+        <!-- Hidden real value submitted with the form -->
+        <input type="hidden" name="market" id="market-value" required>
       </div>
 
-      <div class="field">
-        <label for="company-select">Company</label>
-        <select name="ticker" id="company-select" required></select>
+      <!-- Company search bar (shown after market is selected) -->
+      <div class="field" id="company-field" style="display:none;">
+        <label for="company-search">Company / Stock</label>
+        <div class="search-wrap" id="company-search-wrap">
+          <input type="text" id="company-search" class="search-input" autocomplete="off"
+                 placeholder="Search by name or ticker…" aria-label="Search company">
+          <ul class="search-dropdown" id="company-dropdown" role="listbox"></ul>
+        </div>
+        <!-- Hidden real value submitted with the form -->
+        <input type="hidden" name="ticker" id="company-value" required>
       </div>
 
       <div class="field" style="margin-bottom:0;">
@@ -109,10 +119,66 @@
 
   </form>
 </div>
+
+<style>
+/* ── Search bar / autocomplete ─────────────────────────────────────────── */
+.search-wrap {
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.search-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.search-dropdown.open { display: block; }
+.search-dropdown li {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--text, #1a202c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-dropdown li:hover,
+.search-dropdown li.active {
+  background: var(--accent-soft, #ebf4ff);
+  color: var(--accent, #3b82f6);
+}
+.search-dropdown li .ticker-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  background: var(--accent-soft, #ebf4ff);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-right: 6px;
+  min-width: 36px;
+  text-align: center;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
   window.MARKET_MAP = {{ market_map|safe }};
+  window.MARKETS    = {{ markets|tojson }};
 </script>
 {% endblock %}
