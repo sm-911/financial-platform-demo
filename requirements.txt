@@ -13,3 +13,4 @@ transformers>=4.45.0
 statsmodels>=0.14.2
 flask>=3.0.0
 python-json-logger>=2.0.7
+gunicorn>=21.2.0

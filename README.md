@@ -1,147 +1,160 @@
 # Intelligent Financial Research & Analysis Platform
 
-> *"An intelligent financial analysis platform that combines stock data, news sentiment, and a suite of machine‑learning models to help users analyze and understand stock market trends more efficiently."*
+> *"An intelligent financial analysis platform that combines global stock data, news sentiment, and a suite of machine‑learning models to help users analyze and understand stock market trends more efficiently."*
 
 ---
 
-## What It Does
+## 🌟 Key Features
 
-| Step | What Happens |
-|---|---|
-| 1️⃣ News Sentiment | Fetches live headlines from NewsAPI, scores them with VADER NLP |
-| 2️⃣ Stock Data | Downloads 2 years of OHLCV data via `yfinance` |
-| 3️⃣ Technical Analysis | Plots Close Price + MA20 + Bollinger Bands, prints trend summary |
-| 4️⃣ Machine Learning Models | Trains and evaluates a variety of models (Random Forest, XGBoost, LightGBM, CatBoost, GRU, CNN‑LSTM, Transformer, ARIMA, SVM, LSTM) and shows relevant charts |
-| 5️⃣ Evaluation | Computes RMSE, MAE, MAPE, R²; plots Actual vs Predictions for each model |
+- **Multi-Exchange Support:** Browse and search securities across major global exchanges:
+  - **NSE** (*National Stock Exchange of India*)
+  - **BSE** (*Bombay Stock Exchange*)
+  - **NYSE** (*New York Stock Exchange*)
+  - **NASDAQ** (*Nasdaq Stock Market*)
+- **Benchmark & Broad Market Indices:** Filter constituent stocks by benchmark indices:
+  - **NSE:** NIFTY 50, Nifty Next 50, Nifty 100, Nifty 200, Nifty 500
+  - **BSE:** BSE SENSEX, BSE 100, BSE 200, BSE 500, BSE MidCap, BSE SmallCap
+  - **NYSE:** NYSE Composite, Dow Jones Industrial Average (DJIA), S&P 500
+  - **NASDAQ:** Nasdaq Composite, Nasdaq-100, S&P 500
+  - *Direct exchange search:* Option to search across all exchange stocks without an index filter.
+- **Smart Autocomplete:** Instant, keyboard-navigable autocomplete search for both indices and stock tickers/company names.
+- **News Sentiment Analysis:** Real-time headline fetching from NewsAPI scored with VADER NLP.
+- **Technical Analysis:** Interactive charts for Close Price, MA20, and Bollinger Bands with automatic trend summaries.
+- **10 Machine Learning & Deep Learning Models:** Train, evaluate, and compare:
+  - Tree-based: **Random Forest**, **XGBoost**, **LightGBM**, **CatBoost**
+  - Deep Learning / Neural: **LSTM**, **GRU**, **CNN‑LSTM**, **Transformer**
+  - Statistical & Classical: **ARIMA**, **SVM**
+- **Evaluation & Visual Comparison:** Side-by-side performance metrics (RMSE, MAE, MAPE, R²) and Actual vs. Predicted plots.
 
 ---
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```
-intelligent-financial-platform-expanded/
+financial-platform-demo/
 │
-├── main.py                        ← Run this
-├── config.py                      ← Change ticker/settings here
+├── run_app.py                     ← Web app server entry point
+├── main.py                        ← CLI / standalone execution
+├── config.py                      ← Settings, default ticker, options
+│
+├── app/                           ← Flask application
+│   ├── routes.py                  ← Web routes & search APIs
+│   ├── pipeline.py                ← Orchestration pipeline
+│   ├── templates/                 ← HTML templates (index, waiting, result)
+│   └── static/                    ← Styles & frontend JavaScript
 │
 ├── data/
-│   └── stock_data.py              ← yfinance fetch + feature engineering
+│   ├── build_market_universe.py   ← Generates unified market index & stocks
+│   ├── market_universe.json       ← Indexed exchanges, indices & constituents
+│   ├── raw_exchanges/             ← Exchange datasets (NSE, BSE, NYSE, NASDAQ)
+│   └── stock_data.py              ← yfinance fetcher + feature engineering
 │
 ├── analysis/
-│   ├── technical.py               ← MA chart, Bollinger Bands, trend summary
-│   └── sentiment.py               ← NewsAPI fetch + VADER scoring + chart
+│   ├── technical.py               ← Moving averages, Bollinger Bands
+│   └── sentiment.py               ← NewsAPI fetch + VADER sentiment analysis
 │
-├── models/
-│   ├── random_forest.py           ← Random Forest regression
-│   ├── xgboost_model.py           ← XGBoost regression
-│   ├── lightgbm_model.py          ← LightGBM regression
-│   ├── catboost_model.py          ← CatBoost regression
-│   ├── gru_model.py               ← GRU recurrent network
-│   ├── cnn_lstm_model.py          ← CNN‑LSTM hybrid network
-│   ├── transformer_model.py       ← Transformer‑based time‑series model
-│   ├── arima_model.py             ← Classical ARIMA model
-│   ├── svm_model.py               ← Support Vector Regression
-│   └── lstm_model.py              ← LSTM neural network
+├── models/                        ← Model implementations (RF, LSTM, XGB, etc.)
+├── evaluation/                    ← Performance comparison & metric charts
 │
-├── evaluation/
-│   └── compare_models.py          ← RMSE/MAE/MAPE/R², comparison charts
-│
-├── app/                           ← Flask web UI (routes, pipeline, templates, static assets)
-│
-├── requirements.txt
-├── .gitignore
+├── requirements.txt               ← Python dependencies
+├── Procfile                       ← Deployment process command for Render
+├── render.yaml                    ← Blueprint configuration for Render
 └── README.md
 ```
 
 ---
 
-## Setup
+## 🚀 Local Setup & Run
 
+### 1. Clone the repository
 ```bash
-# 1. Clone the repo
 git clone https://github.com/sm-911/financial-platform-demo.git
 cd financial-platform-demo
+```
 
-# 2. Create and activate a virtual environment
+### 2. Set up virtual environment
+```bash
 python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate       # macOS / Linux
 
-# 3. Install all dependencies
+# Windows:
+venv\Scripts\activate
+
+# macOS / Linux:
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
----
-
-## NewsAPI Key (Optional but Recommended)
-
-1. Go to <https://newsapi.org/register> — free in 30 seconds.
-2. Open `config.py` and replace:
-   ```python
-   NEWSAPI_KEY = "YOUR_NEWSAPI_KEY_HERE"
-   ```
-   with your actual key.
-
-> Without a key, the platform uses a built‑in set of fallback headlines — everything else still works.
-
----
-
-## Run
-
+### 4. Launch the Web Application
 ```bash
-python main.py
+python run_app.py
 ```
+Open your browser and navigate to: **`http://127.0.0.1:5000`**
 
-**To change the stock**, edit `config.py`:
-```python
-TICKER      = "RELIANCE.NS"   # or "AAPL", "INFY.NS", etc.
-NEWS_QUERY  = "Reliance Industries"
-```
+*(Optional CLI Mode: `python main.py`)*
 
 ---
 
-## Charts Produced
+## 🌐 Deployment Guide: Why Render over Vercel?
 
-1. Close Price + 20‑Day Moving Average
-2. Bollinger Bands
-3. News Sentiment Distribution (green/red/grey bar chart)
-4. Feature Importance for each tree‑based model (Random Forest, XGBoost, LightGBM, CatBoost)
-5. Training & Validation Loss Curves for LSTM, GRU, CNN‑LSTM, Transformer
-6. Actual vs Predicted for every model (line chart)
-7. RMSE, MAE, MAPE side‑by‑side bar chart for all models
+> [!IMPORTANT]
+> **Recommended Platform: [Render](https://render.com/)**
+> 
+> - **Why not Vercel?** Vercel is designed for serverless static and frontend apps. Serverless functions on Vercel have a strict execution timeout (10s to 15s) and a hard bundle size limit (50MB to 250MB), which cannot accommodate heavy machine learning packages (`torch`, `xgboost`, `scikit-learn`, `catboost`) or model training pipelines that run in background threads.
+> - **Why Render?** Render provides a persistent Linux Web Service container with full Python support, background threads, and no serverless execution timeout limits.
 
 ---
 
-## Metrics Explained
+### 📦 Step-by-Step Deployment on Render
 
-| Metric | Meaning | Better when |
+#### Step 1: Sign Up / Log In
+1. Go to [Render.com](https://render.com/) and sign in with your GitHub account.
+
+#### Step 2: Create a New Web Service
+1. Click **New +** in the top dashboard and select **Web Service**.
+2. Connect your GitHub repository: `sm-911/financial-platform-demo`.
+
+#### Step 3: Configure Service Settings
+Fill in the configuration fields:
+- **Name:** `financial-platform-demo` (or any custom name)
+- **Region:** Pick the region closest to you (e.g., Singapore, Frankfurt, Oregon)
+- **Branch:** `master`
+- **Runtime:** `Python 3`
+- **Build Command:**
+  ```bash
+  pip install -r requirements.txt
+  ```
+- **Start Command:**
+  ```bash
+  gunicorn run_app:app
+  ```
+- **Instance Type:** Select **Free** (or Starter/Standard for faster ML model training).
+
+#### Step 4: Environment Variables (Optional)
+Under the **Environment Variables** section, you can optionally add:
+- `NEWSAPI_KEY`: *(Your key from [newsapi.org](https://newsapi.org/register), optional - fallback headlines will be used if omitted)*
+- `PYTHON_VERSION`: `3.11.9`
+
+#### Step 5: Deploy
+1. Click **Create Web Service**.
+2. Render will automatically clone the repo, install packages, and launch the web server with Gunicorn.
+3. Once the build finishes, your live public URL will be displayed at the top (e.g., `https://financial-platform-demo.onrender.com`).
+
+---
+
+## 📊 Evaluation Metrics
+
+| Metric | Name | Interpretation |
 |---|---|---|
-| **RMSE** | Avg. prediction error (penalises large errors) | Lower |
-| **MAE** | Avg. absolute error | Lower |
-| **MAPE** | Mean absolute percentage error | Lower |
-| **R²** | Proportion of variance explained (max = 1.0) | Higher |
+| **RMSE** | Root Mean Squared Error | Standard deviation of residuals; penalises large forecasting mistakes. Lower is better. |
+| **MAE** | Mean Absolute Error | Average magnitude of errors. Lower is better. |
+| **MAPE** | Mean Absolute Percentage Error | Percentage error relative to actual stock prices. Lower is better. |
+| **R²** | Coefficient of Determination | Proportion of variance explained by model (max 1.0). Higher is better. |
 
 ---
 
-## Dependencies
-
-| Package | Purpose |
-|---|---|
-| `yfinance` | Stock price data |
-| `pandas`, `numpy` | Data manipulation |
-| `matplotlib` | All charts |
-| `nltk` | VADER sentiment analysis |
-| `scikit-learn` | Random Forest, XGBoost, LightGBM, CatBoost, SVM, metrics, scaling |
-| `tensorflow` | LSTM, GRU, CNN‑LSTM, Transformer |
-| `requests` | NewsAPI HTTP calls |
-
----
-
-## Testing & Contributions
-We welcome **testing** of the platform and any **suggested edits**. Feel free to:
-- Run the Jupyter notebook or the web UI and report any bugs or visual issues.
-- Propose improvements to model selection, chart layouts, or documentation.
-- Open a Pull Request with your changes – I’ll review and merge helpful contributions.
-Your feedback helps make the platform more robust and user‑friendly.
-
-
+## 📄 License
+This project is licensed under the [MIT License](LICENSE).
