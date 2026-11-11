@@ -52,10 +52,24 @@
           clearInterval(ticker);
           document.getElementById('spinner-area').style.display = 'none';
           document.getElementById('error-area').style.display  = 'block';
-          document.getElementById('error-text').textContent = data.error || 'Unknown error.';
+          document.getElementById('error-text').textContent = data.error || 'Unknown error occurred.';
         }
       })
-      .catch(function () { /* network hiccup – keep polling */ });
+      .catch(function (err) {
+        console.warn('Status check network hiccup:', err);
+      });
+
+    // Client-side safety timeout after 180s
+    if (elapsed > 180) {
+      clearInterval(check);
+      clearInterval(ticker);
+      document.getElementById('spinner-area').style.display = 'none';
+      document.getElementById('error-area').style.display  = 'block';
+      document.getElementById('error-text').textContent =
+        'The forecast calculation exceeded the expected time limit (180s). ' +
+        'This usually happens if deep learning models (such as Transformer, CNN-LSTM, or GRU) were selected on a CPU-only instance. ' +
+        'Please try selecting faster tree models like Random Forest, XGBoost, or LightGBM.';
+    }
   }, 2000);
 })();
 </script>

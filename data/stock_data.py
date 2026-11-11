@@ -1,5 +1,6 @@
 """Stock data: download from Yahoo Finance and engineer ML features."""
 
+from pathlib import Path
 import pandas as pd
 import yfinance as yf
 import sys, os
@@ -34,13 +35,14 @@ def fetch_raw_data(ticker: str = config.TICKER, period: str = config.PERIOD) -> 
             if attempt == max_retries:
                 # final attempt – try local fallback before giving up
                 fallback_path = Path(__file__).resolve().parent / 'sample' / f"{ticker.upper()}.csv"
-            if not fallback_path.exists():
-                # Use generic sample if specific ticker not available
-                fallback_path = Path(__file__).resolve().parent / 'sample' / "AAPL.csv"
-            print(f"    Falling back to local sample data: {fallback_path.name}")
-            df = pd.read_csv(fallback_path, parse_dates=['Date'])
-            df.set_index('Date', inplace=True)
-            return df
+                if not fallback_path.exists():
+                    fallback_path = Path(__file__).resolve().parent / 'sample' / "AAPL.csv"
+                if fallback_path.exists():
+                    print(f"    Falling back to local sample data: {fallback_path.name}")
+                    df = pd.read_csv(fallback_path, parse_dates=['Date'])
+                    df.set_index('Date', inplace=True)
+                    return df
+                raise e
             print(f"    Warning: {e}. Retrying in {backoff}s...")
             time.sleep(backoff)
             backoff *= 2
