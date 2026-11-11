@@ -142,56 +142,244 @@
       });
     }
 
-    /* ── Market autocomplete ─────────────────────────────────────────── */
-    const marketSearch   = document.getElementById('market-search');
-    const marketDropdown = document.getElementById('market-dropdown');
-    const marketValue    = document.getElementById('market-value');
-    const companyField   = document.getElementById('company-field');
-    const companySearch  = document.getElementById('company-search');
-    const companyDropdown= document.getElementById('company-dropdown');
-    const companyValue   = document.getElementById('company-value');
+    /* ── Multi-Tier Exchange -> Index -> Stock Flow ────────────────── */
+    const exchangeSelect  = document.getElementById('exchange-select');
+    const indexField      = document.getElementById('index-field');
+    const indexSearch     = document.getElementById('index-search');
+    const indexDropdown   = document.getElementById('index-dropdown');
+    const indexValue      = document.getElementById('index-value');
+    const companyField    = document.getElementById('company-field');
+    const companySearch   = document.getElementById('company-search');
+    const companyDropdown = document.getElementById('company-dropdown');
+    const companyValue    = document.getElementById('company-value');
+    const companyBadge    = document.getElementById('company-selected-badge');
 
-    const marketMap  = window.MARKET_MAP  || {};
-    const marketsArr = window.MARKETS     || [];
+    const exchangesArr = window.EXCHANGES || [];
+    const indicesMap   = window.INDICES   || {};
+    const indexStocks  = window.INDEX_STOCKS || {};
 
-    // Build market items list from MARKETS array
-    function getMarketItems() {
-      return marketsArr.map(function (m) {
-        return { label: m.label, value: m.key, badge: m.key };
+    let currentExchange = '';
+    let currentIndex = 'ALL';
+    let currentStockList = [];
+
+    // Helper: populate and configure index selector for selected exchange
+    function handleExchangeChange(exKey) {
+      currentExchange = exKey;
+      if (!currentExchange) {
+        if (indexField) indexField.style.display = 'none';
+        if (companyField) companyField.style.display = 'none';
+        return;
+      }
+
+      // Show index field
+      if (indexField) indexField.style.display = '';
+      if (companyField) companyField.style.display = '';
+
+      const indicesForEx = indicesMap[currentExchange] || [];
+      // Non-"ALL" indices
+      const specificIndices = indicesForEx.filter(i => i.key !== 'ALL');
+
+      // Rule: if only 1 index exists for this exchange, auto-select it!
+      if (specificIndices.length === 1) {
+        currentIndex = specificIndices[0].key;
+        if (indexSearch) indexSearch.value = specificIndices[0].label;
+        if (indexValue) indexValue.value = currentIndex;
+      } else {
+        // Default to ALL (search whole exchange) while allowing user to pick an index
+        currentIndex = 'ALL';
+        if (indexSearch) indexSearch.value = 'All ' + currentExchange + ' Stocks (No Index Filter)';
+        if (indexValue) indexValue.value = 'ALL';
+      }
+
+      // Reset stock input
+      if (companySearch) { companySearch.value = ''; companySearch.placeholder = 'Search ' + currentExchange + ' stocks…'; }
+      if (companyValue) companyValue.value = '';
+      if (companyBadge) companyBadge.style.display = 'none';
+
+      // Load stock pool for immediate autocomplete
+      loadStocksForCurrentSelection();
+    }
+
+    if (exchangeSelect) {
+      exchangeSelect.addEventListener('change', function () {
+        handleExchangeChange(exchangeSelect.value);
       });
     }
 
-    if (marketSearch && marketDropdown && marketValue) {
+    /* ── Index Autocomplete ─────────────────────────────────────────── */
+    function getIndexItems() {
+      if (!currentExchange) return [];
+      const list = indicesMap[currentExchange] || [];
+      return list.map(function (idx) {
+        return {
+          label: idx.label,
+          value: idx.key,
+          badge: idx.key === 'ALL' ? 'ALL' : 'INDEX'
+        };
+      });
+    }
+
+    if (indexSearch && indexDropdown && indexValue) {
       makeAutocomplete({
-        inputEl:    marketSearch,
-        dropdownEl: marketDropdown,
-        hiddenEl:   marketValue,
-        getItems:   getMarketItems,
+        inputEl:    indexSearch,
+        dropdownEl: indexDropdown,
+        hiddenEl:   indexValue,
+        getItems:   getIndexItems,
         onSelect:   function (item) {
-          // Show company field and populate with this market's stocks
-          if (companyField) companyField.style.display = '';
-          if (companySearch) { companySearch.value = ''; }
-          if (companyValue)  { companyValue.value  = ''; }
-        },
+          currentIndex = item.value;
+          // Reset stock selection
+          if (companySearch) companySearch.value = '';
+          if (companyValue) companyValue.value = '';
+          if (companyBadge) companyBadge.style.display = 'none';
+          loadStocksForCurrentSelection();
+        }
       });
     }
 
-    /* ── Company autocomplete ────────────────────────────────────────── */
-    function getCompanyItems() {
-      const market = marketValue ? marketValue.value : '';
-      const list   = marketMap[market] || [];
-      return list.map(function (c) {
-        return { label: c.name, value: c.ticker, badge: c.id || c.ticker.split('.')[0] };
-      });
+    /* ── Stock Autocomplete with server-side / local fallback ────────── */
+    function loadStocksForCurrentSelection() {
+      // If a specific index is selected and cached locally in window.INDEX_STOCKS
+      if (currentIndex && currentIndex !== 'ALL' && indexStocks[currentIndex]) {
+        currentStockList = indexStocks[currentIndex];
+      } else {
+        // Fetch top initial results from backend
+        fetch(`/api/stocks?exchange=${encodeURIComponent(currentExchange)}&index=${encodeURIComponent(currentIndex)}&limit=100`)
+          .then(res => res.json())
+          .then(data => {
+            currentStockList = data;
+          })
+          .catch(err => {
+            console.error('Error fetching initial stocks:', err);
+          });
+      }
     }
 
+    // Dynamic stock autocomplete logic with debounced live search for large universes
+    let stockSearchTimer = null;
     if (companySearch && companyDropdown && companyValue) {
-      makeAutocomplete({
-        inputEl:    companySearch,
-        dropdownEl: companyDropdown,
-        hiddenEl:   companyValue,
-        getItems:   getCompanyItems,
-        onSelect:   null,
+      let activeIdx = -1;
+      let currentItems = [];
+
+      function open() { companyDropdown.classList.add('open'); }
+      function close() { companyDropdown.classList.remove('open'); activeIdx = -1; }
+
+      function render(items) {
+        currentItems = items;
+        activeIdx = -1;
+        companyDropdown.innerHTML = '';
+        if (!items.length) {
+          const emptyLi = document.createElement('li');
+          emptyLi.style.color = 'var(--text-muted, #718096)';
+          emptyLi.style.cursor = 'default';
+          emptyLi.textContent = 'No matching stocks found';
+          companyDropdown.appendChild(emptyLi);
+          open();
+          return;
+        }
+        items.forEach(function (item) {
+          const li = document.createElement('li');
+          li.setAttribute('role', 'option');
+          const badge = item.id ? `<span class="ticker-badge">${item.id}</span>` : '';
+          li.innerHTML = badge + escHtml(item.name || item.ticker);
+          li.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            select(item);
+          });
+          companyDropdown.appendChild(li);
+        });
+        open();
+      }
+
+      function select(item) {
+        companySearch.value = item.name + ' (' + (item.id || item.ticker) + ')';
+        companyValue.value  = item.ticker;
+        if (companyBadge) {
+          companyBadge.textContent = 'Selected: ' + item.ticker;
+          companyBadge.style.display = 'block';
+        }
+        close();
+      }
+
+      function highlight(idx) {
+        const lis = companyDropdown.querySelectorAll('li');
+        lis.forEach(function (li, i) {
+          li.classList.toggle('active', i === idx);
+        });
+      }
+
+      function queryStocks(query) {
+        const q = query.toLowerCase();
+        // If we have index constituents in memory, filter client-side for lightning-fast UX
+        if (currentIndex && currentIndex !== 'ALL' && indexStocks[currentIndex]) {
+          const matched = indexStocks[currentIndex].filter(function (s) {
+            return (s.name && s.name.toLowerCase().includes(q)) ||
+                   (s.id && s.id.toLowerCase().includes(q)) ||
+                   (s.ticker && s.ticker.toLowerCase().includes(q));
+          }).slice(0, 60);
+          render(matched);
+        } else {
+          // Query the API endpoint across the entire exchange
+          fetch(`/api/stocks?exchange=${encodeURIComponent(currentExchange)}&index=${encodeURIComponent(currentIndex)}&q=${encodeURIComponent(q)}&limit=60`)
+            .then(res => res.json())
+            .then(data => {
+              render(data);
+            })
+            .catch(err => {
+              console.error('Search error:', err);
+            });
+        }
+      }
+
+      companySearch.addEventListener('input', function () {
+        const q = companySearch.value.trim();
+        companyValue.value = '';
+        if (companyBadge) companyBadge.style.display = 'none';
+
+        if (!q) {
+          // Show default initial list
+          if (currentStockList.length) render(currentStockList.slice(0, 40));
+          else close();
+          return;
+        }
+
+        clearTimeout(stockSearchTimer);
+        stockSearchTimer = setTimeout(function () {
+          queryStocks(q);
+        }, 150); // 150ms debounce
+      });
+
+      companySearch.addEventListener('focus', function () {
+        if (!companySearch.value.trim() && currentStockList.length) {
+          render(currentStockList.slice(0, 40));
+        } else if (companySearch.value.trim()) {
+          queryStocks(companySearch.value.trim());
+        }
+      });
+
+      companySearch.addEventListener('keydown', function (e) {
+        const lis = companyDropdown.querySelectorAll('li[role="option"]');
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIdx = Math.min(activeIdx + 1, lis.length - 1);
+          highlight(activeIdx);
+          if (lis[activeIdx]) lis[activeIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIdx = Math.max(activeIdx - 1, 0);
+          highlight(activeIdx);
+          if (lis[activeIdx]) lis[activeIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+          if (activeIdx >= 0 && currentItems[activeIdx]) {
+            e.preventDefault();
+            select(currentItems[activeIdx]);
+          }
+        } else if (e.key === 'Escape') {
+          close();
+        }
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!companySearch.contains(e.target) && !companyDropdown.contains(e.target)) close();
       });
     }
 
@@ -200,11 +388,11 @@
     const submitBtn = document.getElementById('submit-btn');
     if (form && submitBtn) {
       form.addEventListener('submit', function (e) {
-        // Validate hidden fields are filled
-        if (!marketValue.value) {
+        // Validate exchange
+        if (exchangeSelect && !exchangeSelect.value) {
           e.preventDefault();
-          marketSearch.focus();
-          marketSearch.style.outline = '2px solid red';
+          exchangeSelect.focus();
+          exchangeSelect.style.outline = '2px solid red';
           return;
         }
         if (!companyValue.value) {

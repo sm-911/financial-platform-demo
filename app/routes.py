@@ -41,45 +41,103 @@ def _parse_model_list(form):
 
 @bp.route('/', methods=['GET'])
 def index():
-    # Populate market and ticker lists for the UI
-    markets = [
-        {"key": "SENSEX", "label": "Sensex (30 stocks)"},
-        {"key": "NIFTY",  "label": "Nifty 50 (50 stocks)"},
-        {"key": "NASDAQ", "label": "Nasdaq‑100 (100 stocks)"},
-        {"key": "NYSE",   "label": "NYSE (266 stocks)"},
-        {"key": "NSE",    "label": "NSE India (150 stocks)"},
+    # Load universe metadata (exchanges, indices, index_stocks)
+    from pathlib import Path
+    data_path = Path(__file__).parent.parent / 'data' / 'market_universe.json'
+    exchanges = [
+        {"key": "NSE", "label": "National Stock Exchange (NSE)"},
+        {"key": "BSE", "label": "Bombay Stock Exchange (BSE)"},
+        {"key": "NYSE", "label": "New York Stock Exchange (NYSE)"},
+        {"key": "NASDAQ", "label": "Nasdaq Stock Market (NASDAQ)"}
     ]
-    # Build a dictionary: market -> list of {id, ticker, name}
-    from config import STOCK_OPTIONS
-    market_map = {"SENSEX": [], "NIFTY": [], "NASDAQ": [], "NYSE": [], "NSE": []}
-    for k, (ticker, name, cat) in STOCK_OPTIONS.items():
-        if "Sensex" in cat:
-            market_map["SENSEX"].append({"id": k, "ticker": ticker, "name": name})
-        elif "Nifty 50" in cat:
-            market_map["NIFTY"].append({"id": k, "ticker": ticker, "name": name})
-        else:
-            market_map["NASDAQ"].append({"id": k, "ticker": ticker, "name": name})
+    indices = {
+        "NSE": [
+            {"key": "ALL", "label": "All NSE Stocks (No Index Filter)"},
+            {"key": "NIFTY_50", "label": "NIFTY 50 (Benchmark)"},
+            {"key": "NIFTY_NEXT_50", "label": "Nifty Next 50"},
+            {"key": "NIFTY_100", "label": "Nifty 100"},
+            {"key": "NIFTY_200", "label": "Nifty 200"},
+            {"key": "NIFTY_500", "label": "Nifty 500"}
+        ],
+        "BSE": [
+            {"key": "ALL", "label": "All BSE Stocks (No Index Filter)"},
+            {"key": "SENSEX", "label": "BSE SENSEX (Benchmark 30)"},
+            {"key": "BSE_100", "label": "BSE 100"},
+            {"key": "BSE_200", "label": "BSE 200"},
+            {"key": "BSE_500", "label": "BSE 500"},
+            {"key": "BSE_MIDCAP", "label": "BSE MidCap"},
+            {"key": "BSE_SMALLCAP", "label": "BSE SmallCap"}
+        ],
+        "NYSE": [
+            {"key": "ALL", "label": "All NYSE Stocks (No Index Filter)"},
+            {"key": "NYSE_COMPOSITE", "label": "NYSE Composite Index"},
+            {"key": "DJIA", "label": "Dow Jones Industrial Average (DJIA)"},
+            {"key": "SP500_NYSE", "label": "S&P 500 (NYSE Constituents)"}
+        ],
+        "NASDAQ": [
+            {"key": "ALL", "label": "All Nasdaq Stocks (No Index Filter)"},
+            {"key": "NASDAQ_COMPOSITE", "label": "Nasdaq Composite"},
+            {"key": "NASDAQ_100", "label": "Nasdaq-100"},
+            {"key": "SP500_NASDAQ", "label": "S&P 500 (Nasdaq Constituents)"}
+        ]
+    }
+    index_stocks = {}
+    if data_path.exists():
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                raw_u = json.load(f)
+                exchanges = raw_u.get("exchanges", exchanges)
+                indices = raw_u.get("indices", indices)
+                index_stocks = raw_u.get("index_stocks", {})
+        except Exception as e:
+            logger.warning(f"Error loading market universe data: {e}")
 
-    # Load NYSE and NSE from extra Excel data files
+    return render_template(
+        'index.html',
+        exchanges=exchanges,
+        indices=indices,
+        index_stocks=json.dumps(index_stocks)
+    )
+
+@bp.route('/api/stocks', methods=['GET'])
+def search_stocks():
+    """Live search endpoint querying stocks by exchange, index and query string."""
+    exchange = request.args.get('exchange', '').upper().strip()
+    index_key = request.args.get('index', '').strip()
+    q = request.args.get('q', '').lower().strip()
+    limit = int(request.args.get('limit', 50))
+
+    from pathlib import Path
+    data_path = Path(__file__).parent.parent / 'data' / 'market_universe.json'
+    if not data_path.exists():
+        return jsonify([])
+
     try:
-        import openpyxl
-        from pathlib import Path as _Path
-        _xls_base = _Path(__file__).parent.parent / 'data' / 'extra_markets'
-        _nyse_path = _xls_base / 'nyse_companies.xlsx'
-        _nse_path  = _xls_base / 'nse_companies.xlsx'
-        for mkey, path, suffix in [('NYSE', _nyse_path, ''), ('NSE', _nse_path, '.NS')]:
-            if path.exists():
-                wb = openpyxl.load_workbook(path)
-                ws = wb.active
-                rows = list(ws.iter_rows(values_only=True))
-                for row in rows[1:]:
-                    sym, cname = str(row[0]).strip(), str(row[1]).strip()
-                    if sym and cname and sym != 'None':
-                        market_map[mkey].append({"id": sym, "ticker": sym + suffix, "name": cname})
-    except Exception as e:
-        logger.warning(f"Could not load extra market data: {e}")
+        with open(data_path, "r", encoding="utf-8") as f:
+            universe = json.load(f)
 
-    return render_template('index.html', markets=markets, market_map=json.dumps(market_map))
+        candidates = []
+        if index_key and index_key != 'ALL':
+            candidates = universe.get("index_stocks", {}).get(index_key, [])
+        elif exchange:
+            candidates = universe.get("exchange_stocks", {}).get(exchange, [])
+
+        if not q:
+            return jsonify(candidates[:limit])
+
+        results = []
+        for s in candidates:
+            sym = s.get("id", "").lower()
+            ticker = s.get("ticker", "").lower()
+            name = s.get("name", "").lower()
+            if q in sym or q in ticker or q in name:
+                results.append(s)
+                if len(results) >= limit:
+                    break
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"Error in search_stocks API: {e}")
+        return jsonify([])
 
 @bp.route('/run', methods=['POST'])
 def run():

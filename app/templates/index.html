@@ -13,32 +13,44 @@
 
   <form id="forecast-form" method="post" action="{{ url_for('main.run') }}">
 
-    <!-- Market + Company -->
+    <!-- Market / Exchange + Index + Company -->
     <div class="card" style="margin-bottom:16px;">
-      <p class="card-title">Target</p>
+      <p class="card-title">Target Asset</p>
 
-      <!-- Market search bar -->
+      <!-- 1. Stock Exchange Dropdown -->
       <div class="field">
-        <label for="market-search">Market / Index</label>
-        <div class="search-wrap" id="market-search-wrap">
-          <input type="text" id="market-search" class="search-input" autocomplete="off"
-                 placeholder="Search market… (e.g. NYSE, NIFTY)" aria-label="Search market">
-          <ul class="search-dropdown" id="market-dropdown" role="listbox"></ul>
-        </div>
-        <!-- Hidden real value submitted with the form -->
-        <input type="hidden" name="market" id="market-value" required>
+        <label for="exchange-select">Stock Exchange</label>
+        <select id="exchange-select" name="exchange" class="search-input" required>
+          <option value="" disabled selected>Select an exchange…</option>
+          {% for ex in exchanges %}
+          <option value="{{ ex.key }}">{{ ex.label }}</option>
+          {% endfor %}
+        </select>
       </div>
 
-      <!-- Company search bar (shown after market is selected) -->
+      <!-- 2. Respective Index Search / Selector (shown after exchange is picked) -->
+      <div class="field" id="index-field" style="display:none;">
+        <label for="index-search">Index / Sector <span class="text-muted">(Optional - choose index or search all stocks)</span></label>
+        <div class="search-wrap" id="index-search-wrap">
+          <input type="text" id="index-search" class="search-input" autocomplete="off"
+                 placeholder="Search or pick index… (e.g. NIFTY 50, SENSEX, DJIA)" aria-label="Search index">
+          <ul class="search-dropdown" id="index-dropdown" role="listbox"></ul>
+        </div>
+        <!-- Hidden real value submitted with the form -->
+        <input type="hidden" name="index" id="index-value" value="ALL">
+      </div>
+
+      <!-- 3. Company / Stock Live Search -->
       <div class="field" id="company-field" style="display:none;">
         <label for="company-search">Company / Stock</label>
         <div class="search-wrap" id="company-search-wrap">
           <input type="text" id="company-search" class="search-input" autocomplete="off"
-                 placeholder="Search by name or ticker…" aria-label="Search company">
+                 placeholder="Search by company name or ticker symbol…" aria-label="Search company">
           <ul class="search-dropdown" id="company-dropdown" role="listbox"></ul>
         </div>
         <!-- Hidden real value submitted with the form -->
         <input type="hidden" name="ticker" id="company-value" required>
+        <div id="company-selected-badge" style="margin-top:6px; font-size:12px; color:var(--text-muted); display:none;"></div>
       </div>
 
       <div class="field" style="margin-bottom:0;">
@@ -178,7 +190,8 @@
 
 {% block scripts %}
 <script>
-  window.MARKET_MAP = {{ market_map|safe }};
-  window.MARKETS    = {{ markets|tojson }};
+  window.EXCHANGES    = {{ exchanges|tojson }};
+  window.INDICES      = {{ indices|tojson }};
+  window.INDEX_STOCKS = {{ index_stocks|safe }};
 </script>
 {% endblock %}
