@@ -64,7 +64,7 @@ financial-platform-demo/
 
 ---
 
-## 🚀 Local Setup & Run
+## Local Setup & Run
 
 ### 1. Clone the repository
 ```bash
@@ -92,47 +92,6 @@ pip install -r requirements.txt
 ```bash
 python run_app.py
 ```
-Open your browser and navigate to: **`http://127.0.0.1:5000`**
-
-*(Optional CLI Mode: `python main.py`)*
----
-
-### Step-by-Step Deployment on Render
-
-#### Step 1: Sign Up / Log In
-1. Go to [Render.com](https://render.com/) and sign in with your GitHub account.
-
-#### Step 2: Create a New Web Service
-1. Click **New +** in the top dashboard and select **Web Service**.
-2. Connect your GitHub repository: `sm-911/financial-platform-demo`.
-
-#### Step 3: Configure Service Settings
-Fill in the configuration fields:
-- **Name:** `financial-platform-demo` (or any custom name)
-- **Region:** Pick the region closest to you (e.g., Singapore, Frankfurt, Oregon)
-- **Branch:** `master`
-- **Runtime:** `Python 3`
-- **Build Command:**
-  ```bash
-  pip install -r requirements.txt
-  ```
-- **Start Command:**
-  ```bash
-  gunicorn run_app:app
-  ```
-- **Instance Type:** Select **Free** (or Starter/Standard for faster ML model training).
-
-#### Step 4: Environment Variables (Optional)
-Under the **Environment Variables** section, you can optionally add:
-- `NEWSAPI_KEY`: *(Your key from [newsapi.org](https://newsapi.org/register), optional - fallback headlines will be used if omitted)*
-- `PYTHON_VERSION`: `3.11.9`
-
-#### Step 5: Deploy
-1. Click **Create Web Service**.
-2. Render will automatically clone the repo, install packages, and launch the web server with Gunicorn.
-3. Once the build finishes, your live public URL will be displayed at the top (e.g., `https://financial-platform-demo.onrender.com`).
-
----
 
 ## Evaluation Metrics
 
