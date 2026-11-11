@@ -4,7 +4,7 @@
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 - **Multi-Exchange Support:** Browse and search securities across major global exchanges:
   - **NSE** (*National Stock Exchange of India*)
@@ -28,7 +28,7 @@
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 financial-platform-demo/
@@ -95,20 +95,9 @@ python run_app.py
 Open your browser and navigate to: **`http://127.0.0.1:5000`**
 
 *(Optional CLI Mode: `python main.py`)*
-
 ---
 
-## 🌐 Deployment Guide: Why Render over Vercel?
-
-> [!IMPORTANT]
-> **Recommended Platform: [Render](https://render.com/)**
-> 
-> - **Why not Vercel?** Vercel is designed for serverless static and frontend apps. Serverless functions on Vercel have a strict execution timeout (10s to 15s) and a hard bundle size limit (50MB to 250MB), which cannot accommodate heavy machine learning packages (`torch`, `xgboost`, `scikit-learn`, `catboost`) or model training pipelines that run in background threads.
-> - **Why Render?** Render provides a persistent Linux Web Service container with full Python support, background threads, and no serverless execution timeout limits.
-
----
-
-### 📦 Step-by-Step Deployment on Render
+### Step-by-Step Deployment on Render
 
 #### Step 1: Sign Up / Log In
 1. Go to [Render.com](https://render.com/) and sign in with your GitHub account.
@@ -145,7 +134,7 @@ Under the **Environment Variables** section, you can optionally add:
 
 ---
 
-## 📊 Evaluation Metrics
+## Evaluation Metrics
 
 | Metric | Name | Interpretation |
 |---|---|---|
@@ -156,5 +145,5 @@ Under the **Environment Variables** section, you can optionally add:
 
 ---
 
-## 📄 License
+## License
 This project is licensed under the [MIT License](LICENSE).
