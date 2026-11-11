@@ -90,6 +90,11 @@ def fetch_headlines(query: str = None,
 
 def analyze_sentiment(headlines: list[str]) -> tuple[list[tuple], float]:
     """Score each headline with VADER. Returns (results, composite_score)."""
+    import nltk
+    try:
+        nltk.data.find('sentiment/vader_lexicon.zip')
+    except LookupError:
+        nltk.download('vader_lexicon', quiet=True)
     sia = SentimentIntensityAnalyzer()
     results = []
     for h in headlines:

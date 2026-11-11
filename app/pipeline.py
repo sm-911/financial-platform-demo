@@ -20,18 +20,6 @@ from analysis.sentiment import fetch_headlines, analyze_sentiment, plot_sentimen
 from analysis.technical import plot_moving_average, plot_bollinger_bands
 from evaluation.compare_models import compute_metrics, plot_comparison
 
-# Model imports (all follow the BaseModel interface)
-from models.random_forest import train_random_forest, plot_feature_importance
-from models.lstm_model import prepare_lstm_data, train_lstm, predict_lstm, plot_training_loss
-from models.xgboost_model import XGBoostModel
-from models.lightgbm_model import LightGBMModel
-from models.catboost_model import CatBoostModel
-from models.gru_model import GRUModel
-from models.cnn_lstm_model import CNNLSTMModel
-from models.transformer_model import TransformerModel
-from models.arima_model import ARIMAModel
-from models.svm_model import SVMModel
-
 def _fig_to_base64(fig: plt.Figure) -> str:
     """Convert a Matplotlib figure to a base64‑encoded PNG string."""
     buf = io.BytesIO()
@@ -84,6 +72,7 @@ def run_pipeline(ticker: str, news_query: str, selected_models: list, lookback: 
         extra_img = None
         params = extra_params.get(model_name, {})
         if model_name == "rf":
+            from models.random_forest import train_random_forest, plot_feature_importance
             rf_model = train_random_forest(X_train, y_train)
             pred = rf_model.predict(X_test)
             # plot_feature_importance returns its own Figure
@@ -91,6 +80,7 @@ def run_pipeline(ticker: str, news_query: str, selected_models: list, lookback: 
             extra_img = _fig_to_base64(fig_imp)
             plt.close(fig_imp)
         elif model_name == "lstm":
+            from models.lstm_model import prepare_lstm_data, train_lstm, predict_lstm, plot_training_loss
             X_tr_s, X_te_s, y_tr_s, scaler_y = prepare_lstm_data(X_train, y_train, X_test)
             lstm_model, history = train_lstm(X_tr_s, y_tr_s)
             pred = predict_lstm(lstm_model, X_te_s, scaler_y)
@@ -99,22 +89,27 @@ def run_pipeline(ticker: str, news_query: str, selected_models: list, lookback: 
             extra_img = _fig_to_base64(fig_loss)
             plt.close(fig_loss)
         elif model_name == "xgb":
+            from models.xgboost_model import XGBoostModel
             m = XGBoostModel(**params)
             m.fit(X_train, y_train)
             pred = m.predict(X_test)
         elif model_name == "lgbm":
+            from models.lightgbm_model import LightGBMModel
             m = LightGBMModel(**params)
             m.fit(X_train, y_train)
             pred = m.predict(X_test)
         elif model_name == "catboost":
+            from models.catboost_model import CatBoostModel
             m = CatBoostModel(**params)
             m.fit(X_train, y_train)
             pred = m.predict(X_test)
         elif model_name == "gru":
+            from models.gru_model import GRUModel
             m = GRUModel(**params)
             m.fit(X_train, y_train)
             pred = m.predict(X_test)
         elif model_name == "cnn_lstm":
+            from models.cnn_lstm_model import CNNLSTMModel
             seq_len = lookback
             X_seq, y_seq = _prepare_sequences(X_train, y_train, seq_len)
             m = CNNLSTMModel(seq_len=seq_len, n_features=X_train.shape[1], **params)
@@ -122,6 +117,7 @@ def run_pipeline(ticker: str, news_query: str, selected_models: list, lookback: 
             X_test_seq, _ = _prepare_sequences(X_test, y_test, seq_len)
             pred = m.predict(X_test_seq)
         elif model_name == "transformer":
+            from models.transformer_model import TransformerModel
             seq_len = lookback
             X_seq, y_seq = _prepare_sequences(X_train, y_train, seq_len)
             m = TransformerModel(**params)
@@ -129,11 +125,13 @@ def run_pipeline(ticker: str, news_query: str, selected_models: list, lookback: 
             X_test_seq, _ = _prepare_sequences(X_test, y_test, seq_len)
             pred = m.predict(X_test_seq)
         elif model_name == "arima":
+            from models.arima_model import ARIMAModel
             m = ARIMAModel(**params)
             # ARIMA expects a 1‑D target series; we fit on the training target.
             m.fit(y_train)
             pred = m.predict(y_test, steps=len(y_test))
         elif model_name == "svm":
+            from models.svm_model import SVMModel
             m = SVMModel(**params)
             m.fit(X_train, y_train)
             pred = m.predict(X_test)
